@@ -1,0 +1,348 @@
+import SwiftUI
+
+struct VarsityHomeView: View {
+    @StateObject private var schoolsViewModel = SchoolsViewModel()
+    @StateObject private var gamesViewModel = GamesViewModel()
+    @State private var selectedSchoolId: UUID? = nil
+    
+    var body: some View {
+        NavigationView {
+            GeometryReader { geometry in
+                ZStack {
+                    Color(hex: "17171B").ignoresSafeArea()
+                    
+                    // Subtle pink/blue gradient at top
+                    VStack {
+                        LinearGradient(
+                            gradient: Gradient(stops: [
+                                .init(color: Color.blue.opacity(0.2), location: 0.0),
+                                .init(color: Color.pink.opacity(0.2), location: 1.0)
+                            ]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        .frame(height: 180)
+                        .mask(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.black, Color.clear]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        
+                        Spacer()
+                    }
+                    .ignoresSafeArea()
+                    
+                VStack(spacing: 0) {
+                    // Header
+                    HStack {
+                        Text("Home")
+                            .font(.largeTitle)
+                            .fontWeight(.medium)
+                            .fontWidth(.expanded)
+                            .foregroundColor(.white)
+                        
+                        Spacer()
+                        
+                        HStack {
+                            Text("District")
+                                .foregroundColor(.white)
+                            Image(systemName: "chevron.down")
+                                .foregroundColor(.white)
+                                .font(.caption)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 30)
+                    
+                    // Team Selector (using schools for now)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            // ALL button
+                            Button(action: {
+                                selectedSchoolId = nil
+                            }) {
+                                VStack {
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color(hex: "28282B"))
+                                        .frame(width: 67, height: 67)
+                                        .overlay(
+                                            Text("ALL")
+                                                .font(.system(size: 18, weight: .medium))
+                                                .fontWidth(.expanded)
+                                                .foregroundColor(.white)
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .stroke(selectedSchoolId == nil ? Color.white : Color.clear, lineWidth: 2)
+                                        )
+                                }
+                            }
+                            
+                            // School buttons (representing teams for now)
+                            ForEach(schoolsViewModel.schools) { school in
+                                Button(action: {
+                                    selectedSchoolId = school.id
+                                }) {
+                                    VStack {
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .fill(Color(hex: school.primaryColor ?? "#333333"))
+                                            .frame(width: 67, height: 67)
+                                            .overlay(
+                                                AsyncImage(url: schoolsViewModel.logoURL(for: school)) { image in
+                                                    image
+                                                        .resizable()
+                                                        .scaledToFit()
+                                                        .padding(10)
+                                                } placeholder: {
+                                                    Text(school.shortName ?? "S")
+                                                        .font(.system(size: 13, weight: .bold))
+                                                        .foregroundColor(.white)
+                                                }
+                                            )
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 16)
+                                                    .stroke(selectedSchoolId == school.id ? Color.white : Color.clear, lineWidth: 2)
+                                            )
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                    }
+                    .padding(.top, 16)
+                    
+                    // Horizontal Game Cards
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 16) {
+                            if gamesViewModel.isLoading {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .frame(width: UIScreen.main.bounds.width * 0.5 - 28, height: 140)
+                            } else if gamesViewModel.gameCards.isEmpty {
+                                Text("No games available")
+                                    .foregroundColor(.gray)
+                                    .frame(width: UIScreen.main.bounds.width * 0.5 - 28, height: 140)
+                            } else {
+                                ForEach(gamesViewModel.gameCards) { gameCard in
+                                    CompactGameCard(gameData: gameCard)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+                    }
+                    .padding(.top, 20)
+                    
+                    Spacer()
+                }
+                }
+            }
+        }
+        .task {
+            await schoolsViewModel.loadSchools()
+            await gamesViewModel.loadRecentGames()
+        }
+    }
+}
+
+struct CompactGameCard: View {
+    let gameData: GameCardData
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Centered date header
+            HStack {
+                Spacer()
+                Text(gameData.displayDate)
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                Spacer()
+            }
+            .padding(.top, 14)
+            
+            // Teams stacked vertically
+            VStack(spacing: 4) {
+                // Away team row
+                HStack(spacing: 12) {
+                    if let logoURL = gameData.awayTeam.logoURL {
+                        AsyncImage(url: logoURL) { image in
+                            image
+                                .resizable()
+                                .scaledToFit()
+                        } placeholder: {
+                            Circle()
+                                .fill(Color(hex: gameData.awayTeam.primaryColor))
+                                .overlay(
+                                    Text(gameData.awayTeam.abbreviation.prefix(1))
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                )
+                        }
+                        .frame(width: 24, height: 24)
+                        .clipShape(Circle())
+                    } else {
+                        Circle()
+                            .fill(Color(hex: gameData.awayTeam.primaryColor))
+                            .frame(width: 24, height: 24)
+                            .overlay(
+                                Text(gameData.awayTeam.abbreviation.prefix(1))
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                            )
+                    }
+                    
+                    Text(gameData.awayTeam.abbreviation)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    Text(gameData.awayScore != nil ? "\(gameData.awayScore!)" : "-")
+                        .font(.title)
+                        .fontWeight(.heavy)
+                        .fontWidth(.compressed)
+                        .foregroundColor(awayTeamScoreColor(gameData: gameData))
+                }
+                
+                // Home team row
+                HStack(spacing: 12) {
+                    if let logoURL = gameData.homeTeam.logoURL {
+                        AsyncImage(url: logoURL) { image in
+                            image
+                                .resizable()
+                                .scaledToFit()
+                        } placeholder: {
+                            Circle()
+                                .fill(Color(hex: gameData.homeTeam.primaryColor))
+                                .overlay(
+                                    Text(gameData.homeTeam.abbreviation.prefix(1))
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                )
+                        }
+                        .frame(width: 24, height: 24)
+                        .clipShape(Circle())
+                    } else {
+                        Circle()
+                            .fill(Color(hex: gameData.homeTeam.primaryColor))
+                            .frame(width: 24, height: 24)
+                            .overlay(
+                                Text(gameData.homeTeam.abbreviation.prefix(1))
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                            )
+                    }
+                    
+                    Text(gameData.homeTeam.abbreviation)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    Text(gameData.homeScore != nil ? "\(gameData.homeScore!)" : "-")
+                        .font(.title)
+                        .fontWeight(.heavy)
+                        .fontWidth(.compressed)
+                        .foregroundColor(homeTeamScoreColor(gameData: gameData))
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            
+            // Sport tag
+            HStack {
+                Spacer()
+                Text(gameData.sport)
+                    .font(.system(size: 16))
+                    .fontWeight(.semibold)
+                    .fontWidth(.compressed)
+                    .foregroundColor(Color(hex: "17171B"))
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 4)
+                    .background(Color.white)
+                    .clipShape(Capsule())
+                Spacer()
+            }
+            .padding(.bottom, 16)
+        }
+        .background(Color(hex: "28282B"))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .frame(width: UIScreen.main.bounds.width * 0.5 - 28) // 50% screen width minus padding
+        .frame(height: 164)
+    }
+    
+    private func homeTeamScoreColor(gameData: GameCardData) -> Color {
+        // If game is not completed, show white
+        guard gameData.isCompleted,
+              let homeScore = gameData.homeScore,
+              let awayScore = gameData.awayScore else {
+            return .white
+        }
+        
+        // If home team lost, grey out the score
+        if homeScore < awayScore {
+            return .gray
+        }
+        
+        // If home team won or tied, keep white
+        return .white
+    }
+    
+    private func awayTeamScoreColor(gameData: GameCardData) -> Color {
+        // If game is not completed, show white
+        guard gameData.isCompleted,
+              let homeScore = gameData.homeScore,
+              let awayScore = gameData.awayScore else {
+            return .white
+        }
+        
+        // If away team lost, grey out the score
+        if awayScore < homeScore {
+            return .gray
+        }
+        
+        // If away team won or tied, keep white
+        return .white
+    }
+}
+
+// Color extension to handle hex colors
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue:  Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+}
+
+#Preview {
+    VarsityHomeView()
+}

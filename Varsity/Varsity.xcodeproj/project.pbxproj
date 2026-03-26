@@ -6,12 +6,21 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A228ABE92F755FCB003CFA48 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = A228ABE82F755FCB003CFA48 /* Auth */; };
+		A228ABEB2F755FCB003CFA48 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = A228ABEA2F755FCB003CFA48 /* Functions */; };
+		A228ABED2F755FCB003CFA48 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = A228ABEC2F755FCB003CFA48 /* PostgREST */; };
+		A228ABEF2F755FCB003CFA48 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = A228ABEE2F755FCB003CFA48 /* Realtime */; };
+		A228ABF12F755FCB003CFA48 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = A228ABF02F755FCB003CFA48 /* Storage */; };
+		A228ABF32F755FDB003CFA48 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = A228ABF22F755FDB003CFA48 /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
-		A2C13FD72F34F446007779D7 /* Varsity.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Varsity.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A228ABD22F755E75003CFA48 /* Varsity.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Varsity.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A2C13FD92F34F446007779D7 /* Varsity */ = {
+		A228ABD42F755E75003CFA48 /* Varsity */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Varsity;
 			sourceTree = "<group>";
@@ -19,28 +28,34 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		A2C13FD42F34F446007779D7 /* Frameworks */ = {
+		A228ABCF2F755E75003CFA48 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A228ABED2F755FCB003CFA48 /* PostgREST in Frameworks */,
+				A228ABEB2F755FCB003CFA48 /* Functions in Frameworks */,
+				A228ABF32F755FDB003CFA48 /* Supabase in Frameworks */,
+				A228ABE92F755FCB003CFA48 /* Auth in Frameworks */,
+				A228ABF12F755FCB003CFA48 /* Storage in Frameworks */,
+				A228ABEF2F755FCB003CFA48 /* Realtime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		A2C13FCE2F34F446007779D7 = {
+		A228ABC92F755E75003CFA48 = {
 			isa = PBXGroup;
 			children = (
-				A2C13FD92F34F446007779D7 /* Varsity */,
-				A2C13FD82F34F446007779D7 /* Products */,
+				A228ABD42F755E75003CFA48 /* Varsity */,
+				A228ABD32F755E75003CFA48 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		A2C13FD82F34F446007779D7 /* Products */ = {
+		A228ABD32F755E75003CFA48 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A2C13FD72F34F446007779D7 /* Varsity.app */,
+				A228ABD22F755E75003CFA48 /* Varsity.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,64 +63,73 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A2C13FD62F34F446007779D7 /* Varsity */ = {
+		A228ABD12F755E75003CFA48 /* Varsity */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A2C13FE22F34F447007779D7 /* Build configuration list for PBXNativeTarget "Varsity" */;
+			buildConfigurationList = A228ABDD2F755E76003CFA48 /* Build configuration list for PBXNativeTarget "Varsity" */;
 			buildPhases = (
-				A2C13FD32F34F446007779D7 /* Sources */,
-				A2C13FD42F34F446007779D7 /* Frameworks */,
-				A2C13FD52F34F446007779D7 /* Resources */,
+				A228ABCE2F755E75003CFA48 /* Sources */,
+				A228ABCF2F755E75003CFA48 /* Frameworks */,
+				A228ABD02F755E75003CFA48 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				A2C13FD92F34F446007779D7 /* Varsity */,
+				A228ABD42F755E75003CFA48 /* Varsity */,
 			);
 			name = Varsity;
 			packageProductDependencies = (
+				A228ABE82F755FCB003CFA48 /* Auth */,
+				A228ABEA2F755FCB003CFA48 /* Functions */,
+				A228ABEC2F755FCB003CFA48 /* PostgREST */,
+				A228ABEE2F755FCB003CFA48 /* Realtime */,
+				A228ABF02F755FCB003CFA48 /* Storage */,
+				A228ABF22F755FDB003CFA48 /* Supabase */,
 			);
 			productName = Varsity;
-			productReference = A2C13FD72F34F446007779D7 /* Varsity.app */;
+			productReference = A228ABD22F755E75003CFA48 /* Varsity.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		A2C13FCF2F34F446007779D7 /* Project object */ = {
+		A228ABCA2F755E75003CFA48 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
-					A2C13FD62F34F446007779D7 = {
+					A228ABD12F755E75003CFA48 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
 				};
 			};
-			buildConfigurationList = A2C13FD22F34F446007779D7 /* Build configuration list for PBXProject "Varsity" */;
+			buildConfigurationList = A228ABCD2F755E75003CFA48 /* Build configuration list for PBXProject "Varsity" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = A2C13FCE2F34F446007779D7;
+			mainGroup = A228ABC92F755E75003CFA48;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A228ABE02F755F3F003CFA48 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = A2C13FD82F34F446007779D7 /* Products */;
+			productRefGroup = A228ABD32F755E75003CFA48 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A2C13FD62F34F446007779D7 /* Varsity */,
+				A228ABD12F755E75003CFA48 /* Varsity */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A2C13FD52F34F446007779D7 /* Resources */ = {
+		A228ABD02F755E75003CFA48 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -115,7 +139,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A2C13FD32F34F446007779D7 /* Sources */ = {
+		A228ABCE2F755E75003CFA48 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -125,7 +149,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		A2C13FE02F34F447007779D7 /* Debug */ = {
+		A228ABDB2F755E76003CFA48 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -189,7 +213,7 @@
 			};
 			name = Debug;
 		};
-		A2C13FE12F34F447007779D7 /* Release */ = {
+		A228ABDC2F755E76003CFA48 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -246,7 +270,7 @@
 			};
 			name = Release;
 		};
-		A2C13FE32F34F447007779D7 /* Debug */ = {
+		A228ABDE2F755E76003CFA48 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -278,7 +302,7 @@
 			};
 			name = Debug;
 		};
-		A2C13FE42F34F447007779D7 /* Release */ = {
+		A228ABDF2F755E76003CFA48 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -313,25 +337,69 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A2C13FD22F34F446007779D7 /* Build configuration list for PBXProject "Varsity" */ = {
+		A228ABCD2F755E75003CFA48 /* Build configuration list for PBXProject "Varsity" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A2C13FE02F34F447007779D7 /* Debug */,
-				A2C13FE12F34F447007779D7 /* Release */,
+				A228ABDB2F755E76003CFA48 /* Debug */,
+				A228ABDC2F755E76003CFA48 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A2C13FE22F34F447007779D7 /* Build configuration list for PBXNativeTarget "Varsity" */ = {
+		A228ABDD2F755E76003CFA48 /* Build configuration list for PBXNativeTarget "Varsity" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A2C13FE32F34F447007779D7 /* Debug */,
-				A2C13FE42F34F447007779D7 /* Release */,
+				A228ABDE2F755E76003CFA48 /* Debug */,
+				A228ABDF2F755E76003CFA48 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A228ABE02F755F3F003CFA48 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A228ABE82F755FCB003CFA48 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A228ABE02F755F3F003CFA48 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		A228ABEA2F755FCB003CFA48 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A228ABE02F755F3F003CFA48 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		A228ABEC2F755FCB003CFA48 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A228ABE02F755F3F003CFA48 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		A228ABEE2F755FCB003CFA48 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A228ABE02F755F3F003CFA48 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		A228ABF02F755FCB003CFA48 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A228ABE02F755F3F003CFA48 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		A228ABF22F755FDB003CFA48 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A228ABE02F755F3F003CFA48 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = A2C13FCF2F34F446007779D7 /* Project object */;
+	rootObject = A228ABCA2F755E75003CFA48 /* Project object */;
 }
