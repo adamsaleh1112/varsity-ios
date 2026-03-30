@@ -6,6 +6,7 @@ struct User: Codable, Identifiable {
     let email: String?
     let displayName: String?
     let avatarURL: String?
+    let bannerURL: String?
     let authProvider: String
     let createdAt: String
     let lastLogin: String?
@@ -14,6 +15,7 @@ struct User: Codable, Identifiable {
         case id, username, email
         case displayName = "display_name"
         case avatarURL = "avatar_url"
+        case bannerURL = "banner_url"
         case authProvider = "auth_provider"
         case createdAt = "created_at"
         case lastLogin = "last_login"

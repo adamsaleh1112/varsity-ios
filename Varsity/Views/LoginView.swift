@@ -153,7 +153,7 @@ struct LoginView: View {
                         }) {
                             Text(isSignUpMode ? "Already have an account? Sign In" : "Don't have an account? Sign Up")
                                 .foregroundColor(.gray)
-                                .font(.footnote)
+                                .font(.subheadline)
                         }
                     }
                     .padding(.horizontal, 40)

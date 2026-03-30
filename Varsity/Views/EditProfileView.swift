@@ -1,4 +1,7 @@
 import SwiftUI
+import PhotosUI
+import UIKit
+import UniformTypeIdentifiers
 
 struct EditProfileView: View {
     @EnvironmentObject var authManager: SimpleAuthManager
@@ -6,8 +9,293 @@ struct EditProfileView: View {
     
     @State private var displayName: String = ""
     @State private var bio: String = ""
-    @State private var avatarUrl: String = ""
-    @State private var showingImagePicker = false
+    @State private var selectedPhotoItem: PhotosPickerItem? = nil
+    @State private var selectedImageData: Data? = nil
+    @State private var selectedBannerItem: PhotosPickerItem? = nil
+    @State private var selectedBannerData: Data? = nil
+    @State private var isUploading = false
+    @State private var showingPhotoOptions = false
+    @State private var showingPhotoPicker = false
+    @State private var showingDocumentPicker = false
+    @State private var showingBannerOptions = false
+    @State private var showingBannerPicker = false
+    @State private var showingBannerDocumentPicker = false
+    
+    // Helper computed property for banner view
+    private var bannerView: some View {
+        Group {
+            if let selectedBannerData,
+               let uiImage = UIImage(data: selectedBannerData) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            } else if let bannerUrl = authManager.currentUser?.bannerUrl,
+                      !bannerUrl.isEmpty {
+                AsyncImage(url: URL(string: bannerUrl)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.gray.opacity(0.3))
+                }
+                .frame(height: 120)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            } else {
+                // Default banner - no placeholder
+                AsyncImage(url: URL(string: "https://hpfxonowaopgclnujptn.supabase.co/storage/v1/object/public/user-assets/banners/defaultuserpic.jpg")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.gray.opacity(0.3))
+                }
+                .frame(height: 120)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+    }
+    
+    // Helper computed property for avatar view
+    private var avatarView: some View {
+        Group {
+            if let selectedImageData,
+               let uiImage = UIImage(data: selectedImageData) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 120, height: 120)
+                    .clipShape(Circle())
+            } else if let currentUrl = authManager.currentUser?.avatarUrl,
+                      !currentUrl.isEmpty {
+                AsyncImage(url: URL(string: currentUrl)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Circle()
+                        .fill(Color.gray.opacity(0.3))
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                        )
+                }
+                .frame(width: 120, height: 120)
+                .clipShape(Circle())
+            } else {
+                AsyncImage(url: URL(string: "https://hpfxonowaopgclnujptn.supabase.co/storage/v1/object/public/user-assets/avatars/defaultuserpic.jpg")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Circle()
+                        .fill(Color.gray.opacity(0.3))
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                        )
+                }
+                .frame(width: 120, height: 120)
+                .clipShape(Circle())
+            }
+        }
+    }
+    
+    // Helper computed property for banner section
+    private var bannerSection: some View {
+        VStack(spacing: 12) {
+            bannerView
+            
+            Button(action: {
+                showingBannerOptions = true
+            }) {
+                Text(isUploading ? "Uploading..." : "Change Banner")
+                    .foregroundColor(Color(hex: "6e27e8"))
+                    .font(.subheadline)
+            }
+            .disabled(isUploading)
+            .confirmationDialog("Change Banner", isPresented: $showingBannerOptions, titleVisibility: .visible) {
+                Button("Photo Library") {
+                    showingBannerPicker = true
+                }
+                Button("Files") {
+                    showingBannerDocumentPicker = true
+                }
+                Button("Remove Banner", role: .destructive) {
+                    selectedBannerData = nil
+                    selectedBannerItem = nil
+                    Task {
+                        // Delete from storage first
+                        await authManager.deleteBanner()
+                        // Then update profile to default
+                        await authManager.updateProfile(
+                            displayName: displayName.isEmpty ? nil : displayName,
+                            bio: bio.isEmpty ? nil : bio,
+                            avatarUrl: nil,
+                            bannerUrl: "https://hpfxonowaopgclnujptn.supabase.co/storage/v1/object/public/user-assets/banners/defaultuserpic.jpg"
+                        )
+                    }
+                }
+                Button("Cancel", role: .cancel) { }
+            }
+            .photosPicker(isPresented: $showingBannerPicker, selection: $selectedBannerItem, matching: .images)
+            .sheet(isPresented: $showingBannerDocumentPicker) {
+                DocumentPicker { url in
+                    if let data = try? Data(contentsOf: url) {
+                        selectedBannerData = data
+                    }
+                    showingBannerDocumentPicker = false
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+    
+    // Helper computed property for profile picture section
+    private var profilePictureSection: some View {
+        VStack(spacing: 16) {
+            avatarView
+            
+            Button(action: {
+                showingPhotoOptions = true
+            }) {
+                Text(isUploading ? "Uploading..." : "Change Photo")
+                    .foregroundColor(Color(hex: "6e27e8"))
+                    .font(.subheadline)
+            }
+            .disabled(isUploading)
+            .confirmationDialog("Change Profile Picture", isPresented: $showingPhotoOptions, titleVisibility: .visible) {
+                Button("Photo Library") {
+                    showingPhotoPicker = true
+                }
+                Button("Files") {
+                    showingDocumentPicker = true
+                }
+                Button("Remove Avatar", role: .destructive) {
+                    selectedImageData = nil
+                    selectedPhotoItem = nil
+                    Task {
+                        // Delete from storage first
+                        await authManager.deleteAvatar()
+                        // Then update profile to default
+                        await authManager.updateProfile(
+                            displayName: displayName.isEmpty ? nil : displayName,
+                            bio: bio.isEmpty ? nil : bio,
+                            avatarUrl: "https://hpfxonowaopgclnujptn.supabase.co/storage/v1/object/public/user-assets/avatars/defaultuserpic.jpg",
+                            bannerUrl: nil
+                        )
+                    }
+                }
+                Button("Cancel", role: .cancel) { }
+            }
+            .photosPicker(isPresented: $showingPhotoPicker, selection: $selectedPhotoItem, matching: .images)
+            .sheet(isPresented: $showingDocumentPicker) {
+                DocumentPicker { url in
+                    if let data = try? Data(contentsOf: url) {
+                        selectedImageData = data
+                    }
+                    showingDocumentPicker = false
+                }
+            }
+        }
+        .padding(.top, 8)
+    }
+    
+    // Helper computed property for form fields
+    private var formFieldsSection: some View {
+        VStack(spacing: 16) {
+            // Display Name Field
+            TextField("", text: $displayName, prompt: Text("Display Name").foregroundColor(.gray.opacity(0.6)))
+                .padding()
+                .background(Color.clear)
+                .foregroundColor(.white)
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color(hex: "28282B"), lineWidth: 1)
+                )
+                .frame(height: 50)
+            
+            // Bio Field
+            TextField("", text: $bio, prompt: Text("Bio").foregroundColor(.gray.opacity(0.6)), axis: .vertical)
+                .lineLimit(3...6)
+                .padding()
+                .background(Color.clear)
+                .foregroundColor(.white)
+                .autocapitalization(.none)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color(hex: "28282B"), lineWidth: 1)
+                )
+        }
+        .padding(.horizontal, 20)
+    }
+    
+    // Helper computed property for save button
+    private var saveButton: some View {
+        Button(action: {
+            Task {
+                var uploadedAvatarUrl: String? = nil
+                var uploadedBannerUrl: String? = nil
+                
+                print("Save button tapped")
+                print("selectedImageData: \(selectedImageData != nil ? "present" : "nil")")
+                print("selectedBannerData: \(selectedBannerData != nil ? "present" : "nil")")
+                
+                // Upload avatar if selected
+                if let imageData = selectedImageData {
+                    print("Uploading avatar...")
+                    isUploading = true
+                    uploadedAvatarUrl = await authManager.uploadAvatarImage(imageData: imageData)
+                    print("Avatar upload result: \(uploadedAvatarUrl ?? "nil")")
+                }
+                
+                // Upload banner if selected
+                if let bannerData = selectedBannerData {
+                    print("Uploading banner...")
+                    isUploading = true
+                    uploadedBannerUrl = await authManager.uploadBannerImage(imageData: bannerData)
+                    print("Banner upload result: \(uploadedBannerUrl ?? "nil")")
+                }
+                
+                isUploading = false
+                
+                print("Updating profile with avatar: \(uploadedAvatarUrl ?? "nil"), banner: \(uploadedBannerUrl ?? "nil")")
+                
+                await authManager.updateProfile(
+                    displayName: displayName.isEmpty ? nil : displayName,
+                    bio: bio.isEmpty ? nil : bio,
+                    avatarUrl: uploadedAvatarUrl,
+                    bannerUrl: uploadedBannerUrl
+                )
+                if authManager.errorMessage == nil {
+                    dismiss()
+                }
+            }
+        }) {
+            HStack {
+                if authManager.isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(0.8)
+                }
+                Text("Save Changes")
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .background(Color(hex: "6e27e8"))
+            .cornerRadius(12)
+        }
+        .disabled(authManager.isLoading)
+        .padding(.horizontal, 20)
+    }
     
     var body: some View {
         NavigationView {
@@ -16,122 +304,10 @@ struct EditProfileView: View {
                 
                 ScrollView {
                     VStack(spacing: 24) {
-                        // Profile Picture Section
-                        VStack(spacing: 16) {
-                            AsyncImage(url: URL(string: avatarUrl.isEmpty ? (authManager.currentUser?.avatarUrl ?? "") : avatarUrl)) { image in
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                            } placeholder: {
-                                Circle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .overlay(
-                                        Image(systemName: "person.fill")
-                                            .font(.system(size: 40))
-                                            .foregroundColor(.gray)
-                                    )
-                            }
-                            .frame(width: 120, height: 120)
-                            .clipShape(Circle())
-                            
-                            Button("Change Photo") {
-                                showingImagePicker = true
-                            }
-                            .foregroundColor(Color(hex: "6e27e8"))
-                            .font(.subheadline)
-                        }
-                        .padding(.top, 20)
-                        
-                        // Form Fields
-                        VStack(spacing: 16) {
-                            // Display Name Field
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Display Name")
-                                    .foregroundColor(.white)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                
-                                TextField("Enter display name", text: $displayName)
-                                    .padding()
-                                    .background(Color.clear)
-                                    .foregroundColor(.white)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color(hex: "28282B"), lineWidth: 1)
-                                    )
-                                    .frame(height: 50)
-                            }
-                            
-                            // Bio Field
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Bio")
-                                    .foregroundColor(.white)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                
-                                TextField("Tell us about yourself", text: $bio, axis: .vertical)
-                                    .lineLimit(3...6)
-                                    .padding()
-                                    .background(Color.clear)
-                                    .foregroundColor(.white)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color(hex: "28282B"), lineWidth: 1)
-                                    )
-                            }
-                            
-                            // Avatar URL Field (for now - can replace with image picker later)
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Profile Picture URL")
-                                    .foregroundColor(.white)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                
-                                TextField("Enter image URL", text: $avatarUrl)
-                                    .padding()
-                                    .background(Color.clear)
-                                    .foregroundColor(.white)
-                                    .keyboardType(.URL)
-                                    .autocapitalization(.none)
-                                    .disableAutocorrection(true)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color(hex: "28282B"), lineWidth: 1)
-                                    )
-                                    .frame(height: 50)
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        // Save Button
-                        Button(action: {
-                            Task {
-                                await authManager.updateProfile(
-                                    displayName: displayName.isEmpty ? nil : displayName,
-                                    bio: bio.isEmpty ? nil : bio,
-                                    avatarUrl: avatarUrl.isEmpty ? nil : avatarUrl
-                                )
-                                if authManager.errorMessage == nil {
-                                    dismiss()
-                                }
-                            }
-                        }) {
-                            HStack {
-                                if authManager.isLoading {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.8)
-                                }
-                                Text("Save Changes")
-                            }
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(Color(hex: "6e27e8"))
-                            .cornerRadius(12)
-                        }
-                        .disabled(authManager.isLoading)
-                        .padding(.horizontal, 20)
+                        bannerSection
+                        profilePictureSection
+                        formFieldsSection
+                        saveButton
                         
                         Spacer(minLength: 50)
                     }
@@ -139,19 +315,35 @@ struct EditProfileView: View {
             }
             .navigationTitle("Edit Profile")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundColor(.white)
-                }
-            }
+            .toolbarBackground(Color(hex: "17171B"), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .onAppear {
                 // Pre-populate fields with current user data
                 displayName = authManager.currentUser?.displayName ?? ""
                 bio = authManager.currentUser?.bio ?? ""
-                avatarUrl = authManager.currentUser?.avatarUrl ?? ""
+            }
+            .onChange(of: selectedPhotoItem) { _, newItem in
+                Task {
+                    print("Photo item selected, loading data...")
+                    if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                        selectedImageData = data
+                        print("Photo data loaded: \(data.count) bytes")
+                    } else {
+                        print("Failed to load photo data")
+                    }
+                }
+            }
+            .onChange(of: selectedBannerItem) { _, newItem in
+                Task {
+                    print("Banner item selected, loading data...")
+                    if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                        selectedBannerData = data
+                        print("Banner data loaded: \(data.count) bytes")
+                    } else {
+                        print("Failed to load banner data")
+                    }
+                }
             }
         }
         .alert("Error", isPresented: .constant(authManager.errorMessage != nil)) {
@@ -166,4 +358,37 @@ struct EditProfileView: View {
 
 #Preview {
     EditProfileView()
+}
+
+// DocumentPicker for selecting files
+struct DocumentPicker: UIViewControllerRepresentable {
+    let onPick: (URL) -> Void
+    
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [UTType.image])
+        picker.allowsMultipleSelection = false
+        picker.delegate = context.coordinator
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, UIDocumentPickerDelegate {
+        let parent: DocumentPicker
+        
+        init(_ parent: DocumentPicker) {
+            self.parent = parent
+        }
+        
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            guard let url = urls.first else { return }
+            parent.onPick(url)
+        }
+        
+        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {}
+    }
 }

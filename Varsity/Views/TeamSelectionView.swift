@@ -1,4 +1,5 @@
 import SwiftUI
+import Supabase
 
 struct TeamSelectionView: View {
     @EnvironmentObject var authManager: SimpleAuthManager
@@ -22,7 +23,7 @@ struct TeamSelectionView: View {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.gray)
                         
-                        TextField("Search schools...", text: $searchText)
+                        TextField("", text: $searchText, prompt: Text("Search schools...").foregroundColor(.gray.opacity(0.6)))
                             .foregroundColor(.white)
                             .onChange(of: searchText) {
                                 filterSchools()
@@ -39,10 +40,14 @@ struct TeamSelectionView: View {
                         }
                     }
                     .padding()
-                    .background(Color(hex: "28282B"))
-                    .cornerRadius(12)
+                    .background(Color.clear)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color(hex: "28282B"), lineWidth: 1)
+                    )
+                    .frame(height: 50)
                     .padding(.horizontal, 20)
-                    .padding(.top, 20)
+                    .padding(.top, 8)
                     
                     // Schools List
                     if isLoading {
@@ -104,14 +109,9 @@ struct TeamSelectionView: View {
             }
             .navigationTitle("Manage Following")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .foregroundColor(.white)
-                }
-            }
+            .toolbarBackground(Color(hex: "17171B"), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .onAppear {
                 loadTeamsAndFollowing()
             }
@@ -135,19 +135,36 @@ struct TeamSelectionView: View {
     }
     
     private func loadSchoolsFromDatabase() async {
-        // Use mock data for now
-        await MainActor.run {
-            availableSchools = [
-                School(id: UUID(), name: "University of California", shortName: "UC Berkeley", city: "Berkeley", state: "CA", mascot: "Golden Bears", primaryColor: Optional<String>.none, secondaryColor: Optional<String>.none, logoPath: Optional<String>.none),
-                School(id: UUID(), name: "Stanford University", shortName: "Stanford", city: "Stanford", state: "CA", mascot: "Cardinal", primaryColor: Optional<String>.none, secondaryColor: Optional<String>.none, logoPath: Optional<String>.none),
-                School(id: UUID(), name: "UCLA", shortName: "UCLA", city: "Los Angeles", state: "CA", mascot: "Bruins", primaryColor: Optional<String>.none, secondaryColor: Optional<String>.none, logoPath: Optional<String>.none),
-                School(id: UUID(), name: "USC", shortName: "USC", city: "Los Angeles", state: "CA", mascot: "Trojans", primaryColor: Optional<String>.none, secondaryColor: Optional<String>.none, logoPath: Optional<String>.none),
-                School(id: UUID(), name: "San Jose State", shortName: "SJSU", city: "San Jose", state: "CA", mascot: "Spartans", primaryColor: Optional<String>.none, secondaryColor: Optional<String>.none, logoPath: Optional<String>.none),
-                School(id: UUID(), name: "California State University", shortName: "Cal State", city: "Sacramento", state: "CA", mascot: "Hornets", primaryColor: Optional<String>.none, secondaryColor: Optional<String>.none, logoPath: Optional<String>.none),
-                School(id: UUID(), name: "University of Southern California", shortName: "USC", city: "Los Angeles", state: "CA", mascot: "Trojans", primaryColor: Optional<String>.none, secondaryColor: Optional<String>.none, logoPath: Optional<String>.none)
-            ]
-            filteredSchools = availableSchools
-            isLoading = false
+        do {
+            let supabase = SupabaseManager.shared.client
+            let response = try await supabase
+                .from("schools")
+                .select("*")
+                .execute()
+            
+            // Debug: print raw response
+            if let jsonString = String(data: response.data, encoding: .utf8) {
+                print("Raw schools response: \(jsonString)")
+            }
+            
+            let schools = try JSONDecoder().decode([School].self, from: response.data)
+            
+            // Debug: print parsed schools
+            for school in schools {
+                print("Parsed school: \(school.name), logoPath: \(school.logoPath ?? "nil")")
+            }
+            
+            await MainActor.run {
+                availableSchools = schools
+                filteredSchools = schools
+                isLoading = false
+            }
+        } catch {
+            print("Error fetching schools: \(error)")
+            await MainActor.run {
+                errorMessage = "Failed to load schools"
+                isLoading = false
+            }
         }
     }
     
@@ -186,24 +203,29 @@ struct TeamRowView: View {
     let isFollowed: Bool
     let onToggle: () -> Void
     
+    // Use the same service as Home screen
+    private var logoURL: URL? {
+        SportsDataService().publicImageURL(bucket: "school-assets", path: school.logoPath)
+    }
+    
     var body: some View {
-        HStack {
-            // School Logo
-            AsyncImage(url: URL(string: school.logoPath ?? "")) { image in
+        HStack(spacing: 16) {
+            // School Logo - use same technique as Home screen
+            AsyncImage(url: logoURL) { image in
                 image
                     .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .scaledToFit()
             } placeholder: {
                 Circle()
-                    .fill(Color.gray.opacity(0.3))
+                    .fill(Color(hex: school.primaryColor ?? "28282B"))
                     .overlay(
-                        Text(String(school.name.prefix(1)))
-                            .font(.title2)
+                        Text(school.shortName ?? String(school.name.prefix(1)))
+                            .font(.caption)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                     )
             }
-            .frame(width: 50, height: 50)
+            .frame(width: 48, height: 48)
             .clipShape(Circle())
             
             // School Info
@@ -219,24 +241,24 @@ struct TeamRowView: View {
             
             Spacer()
             
-            // Follow Button
+            // Follow Button - plus/checkmark icon
             Button(action: onToggle) {
-                Text(isFollowed ? "Following" : "Follow")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                Image(systemName: isFollowed ? "checkmark" : "plus")
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(isFollowed ? .white : Color(hex: "6e27e8"))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
+                    .frame(width: 36, height: 36)
                     .background(
-                        RoundedRectangle(cornerRadius: 20)
+                        Circle()
                             .fill(isFollowed ? Color(hex: "6e27e8") : Color.clear)
-                            .stroke(Color(hex: "6e27e8"), lineWidth: 1)
+                            .stroke(isFollowed ? Color(hex: "6e27e8") : Color(hex: "6e27e8"), lineWidth: 2)
                     )
             }
         }
         .padding()
-        .background(Color(hex: "28282B"))
-        .cornerRadius(12)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(hex: "28282B"))
+        )
     }
 }
 

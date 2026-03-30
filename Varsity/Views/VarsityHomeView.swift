@@ -4,6 +4,7 @@ struct VarsityHomeView: View {
     @StateObject private var schoolsViewModel = SchoolsViewModel()
     @StateObject private var gamesViewModel = GamesViewModel()
     @State private var selectedSchoolId: UUID? = nil
+    @State private var selectedScope = "District"
     
     var body: some View {
         NavigationView {
@@ -45,12 +46,21 @@ struct VarsityHomeView: View {
                         
                         Spacer()
                         
-                        HStack {
-                            Text("District")
-                                .foregroundColor(.white)
-                            Image(systemName: "chevron.down")
-                                .foregroundColor(.white)
-                                .font(.caption)
+                        Menu {
+                            Button("District") {
+                                selectedScope = "District"
+                            }
+                            Button("Nation") {
+                                selectedScope = "Nation"
+                            }
+                        } label: {
+                            HStack {
+                                Text(selectedScope)
+                                    .foregroundColor(.white)
+                                Image(systemName: "chevron.down")
+                                    .foregroundColor(.white)
+                                    .font(.caption)
+                            }
                         }
                     }
                     .padding(.horizontal, 20)
