@@ -262,7 +262,7 @@ struct TeamRowView: View {
             // Follow Button - plus/checkmark icon
             Button(action: onToggle) {
                 Image(systemName: isFollowed ? "checkmark" : "plus")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(isFollowed ? .white : Color(hex: "6e27e8"))
                     .frame(width: 24, height: 24)
                     .background(
@@ -271,6 +271,7 @@ struct TeamRowView: View {
                             .stroke(isFollowed ? Color(hex: "6e27e8") : Color(hex: "6e27e8"), lineWidth: 2)
                     )
             }
+            .padding(.trailing, 8)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
