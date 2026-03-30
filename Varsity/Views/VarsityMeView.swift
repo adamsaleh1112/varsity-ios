@@ -4,6 +4,7 @@ struct VarsityMeView: View {
     @EnvironmentObject var authManager: SimpleAuthManager
     @State private var showingEditProfile = false
     @State private var showingTeamSelection = false
+    @State private var showingSettings = false
     @State private var scrollOffset: CGFloat = 0
     @State private var bannerRefreshToken = Date().timeIntervalSince1970
     
@@ -59,6 +60,27 @@ struct VarsityMeView: View {
             }
             .background(Color(hex: "17171B"))
             .navigationTitle("")
+            .overlay(
+                // Floating Settings Button
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            showingSettings = true
+                        }) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .frame(width: 44, height: 44)
+                                .background(Color.black.opacity(0.3))
+                                .clipShape(Circle())
+                        }
+                        .padding(.trailing, 20)
+                        .padding(.top, 60)
+                    }
+                    Spacer()
+                }
+            )
             .onChange(of: authManager.currentUser?.bannerUrl) { _ in
                 bannerRefreshToken = Date().timeIntervalSince1970
             }
@@ -72,6 +94,9 @@ struct VarsityMeView: View {
             }
             .fullScreenCover(isPresented: $showingEditProfile) {
                 EditProfileView()
+            }
+            .fullScreenCover(isPresented: $showingSettings) {
+                UserSettingsView()
             }
         }
     }
@@ -151,20 +176,6 @@ struct VarsityMeView: View {
                         .background(Color(hex: "28282B"))
                         .cornerRadius(20)
                 }
-            }
-            
-            Button(action: {
-                authManager.signOut()
-            }) {
-                HStack {
-                    Image(systemName: "rectangle.portrait.and.arrow.right")
-                    Text("Sign Out")
-                }
-                .foregroundColor(.red)
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(Color.red.opacity(0.1))
-                .cornerRadius(20)
             }
         }
         .padding(.horizontal, 20)
