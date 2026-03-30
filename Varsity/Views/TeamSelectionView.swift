@@ -264,7 +264,7 @@ struct TeamRowView: View {
                 Image(systemName: isFollowed ? "checkmark" : "plus")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(isFollowed ? .white : Color(hex: "6e27e8"))
-                    .frame(width: 36, height: 36)
+                    .frame(width: 24, height: 24)
                     .background(
                         Circle()
                             .fill(isFollowed ? Color(hex: "6e27e8") : Color.clear)
@@ -272,7 +272,8 @@ struct TeamRowView: View {
                     )
             }
         }
-        .padding()
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color(hex: "28282B"))
