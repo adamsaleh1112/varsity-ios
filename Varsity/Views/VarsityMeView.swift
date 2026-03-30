@@ -76,7 +76,7 @@ struct VarsityMeView: View {
                                 .clipShape(Circle())
                         }
                         .padding(.trailing, 20)
-                        .padding(.top, 60)
+                        .padding(.top, 20)
                     }
                     Spacer()
                 }
