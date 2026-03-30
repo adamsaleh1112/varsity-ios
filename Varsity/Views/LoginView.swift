@@ -113,6 +113,18 @@ struct LoginView: View {
                         )
                         .frame(height: 50)
                         
+                        // Forgot Password Button (only in sign in mode)
+                        if !isSignUpMode {
+                            Button(action: {
+                                // Handle forgot password
+                            }) {
+                                Text("Forgot Password?")
+                                    .foregroundColor(Color(hex: "6e27e8"))
+                                    .font(.subheadline)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                        }
+                        
                         // Sign In/Sign Up Button
                         Button(action: {
                             Task {
