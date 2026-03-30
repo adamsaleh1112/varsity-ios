@@ -181,6 +181,13 @@ struct VarsityHomeView: View {
             await schoolsViewModel.loadSchools()
             await gamesViewModel.loadRecentGames()
         }
+        .onAppear {
+            // Force reload when view appears (e.g., after sign out/sign in)
+            Task {
+                await schoolsViewModel.loadSchools()
+                await gamesViewModel.loadRecentGames()
+            }
+        }
     }
 }
 
