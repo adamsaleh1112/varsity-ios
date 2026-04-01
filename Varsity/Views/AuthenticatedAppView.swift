@@ -21,34 +21,95 @@ struct AuthenticatedAppView: View {
 
 struct MainAppView: View {
     @EnvironmentObject var authManager: SimpleAuthManager
+    @State private var selectedTab = 0
     
     var body: some View {
-        TabView {
-            VarsityHomeView()
-                .tabItem {
-                    Image(systemName: "house.fill")
-                    Text("Home")
+        ZStack(alignment: .bottom) {
+            // Content
+            Group {
+                switch selectedTab {
+                case 0:
+                    VarsityHomeView()
+                case 1:
+                    VarsityGamesView()
+                case 2:
+                    VarsityMeView()
+                case 3:
+                    SearchView()
+                default:
+                    VarsityHomeView()
                 }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            VarsityGamesView()
-                .tabItem {
-                    Image(systemName: "sportscourt.fill")
-                    Text("Games")
+            // Custom Tab Bar
+            VStack(spacing: 0) {
+                Spacer()
+                
+                HStack(spacing: 8) {
+                    // Left group: Home, Games, Me
+                    HStack(spacing: 0) {
+                        TabButton(
+                            icon: "house.fill",
+                            label: "Home",
+                            isSelected: selectedTab == 0,
+                            action: { selectedTab = 0 }
+                        )
+                        
+                        TabButton(
+                            icon: "sportscourt.fill",
+                            label: "Games",
+                            isSelected: selectedTab == 1,
+                            action: { selectedTab = 1 }
+                        )
+                        
+                        TabButton(
+                            icon: "person.fill",
+                            label: "Me",
+                            isSelected: selectedTab == 2,
+                            action: { selectedTab = 2 }
+                        )
+                    }
+                    .background(Color(hex: "28282B").opacity(0.9))
+                    .clipShape(Capsule())
+                    
+                    Spacer()
+                    
+                    // Right: Search (separated)
+                    TabButton(
+                        icon: "magnifyingglass",
+                        label: "Search",
+                        isSelected: selectedTab == 3,
+                        action: { selectedTab = 3 }
+                    )
+                    .background(Color(hex: "28282B").opacity(0.9))
+                    .clipShape(Capsule())
                 }
-            
-            VarsityMeView()
-                .tabItem {
-                    Image(systemName: "person.fill")
-                    Text("Me")
-                }
-            
-            SearchView()
-                .tabItem {
-                    Image(systemName: "magnifyingglass")
-                    Text("Search")
-                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
+            }
         }
-        .accentColor(.white)
+        .ignoresSafeArea(.keyboard)
+    }
+}
+
+struct TabButton: View {
+    let icon: String
+    let label: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 22))
+                Text(label)
+                    .font(.caption2)
+            }
+            .foregroundColor(isSelected ? .white : .gray)
+            .frame(width: 70, height: 50)
+        }
     }
 }
 
