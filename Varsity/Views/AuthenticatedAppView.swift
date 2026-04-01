@@ -21,32 +21,29 @@ struct AuthenticatedAppView: View {
 
 struct MainAppView: View {
     @EnvironmentObject var authManager: SimpleAuthManager
+    @State private var searchText = ""
     
     var body: some View {
         TabView {
-            VarsityHomeView()
-                .tabItem {
-                    Image(systemName: "house.fill")
-                    Text("Home")
-                }
+            Tab("Home", systemImage: "house.fill") {
+                VarsityHomeView()
+            }
             
-            VarsityGamesView()
-                .tabItem {
-                    Image(systemName: "sportscourt.fill")
-                    Text("Games")
-                }
+            Tab("Games", systemImage: "sportscourt.fill") {
+                VarsityGamesView()
+            }
             
-            VarsityMeView()
-                .tabItem {
-                    Image(systemName: "person.fill")
-                    Text("Me")
-                }
+            Tab("Me", systemImage: "person.fill") {
+                VarsityMeView()
+            }
             
-            SearchView()
-                .tabItem {
-                    Image(systemName: "magnifyingglass")
-                    Text("Search")
+            // Dedicated Search Tab (separate on the right)
+            Tab(role: .search) {
+                NavigationStack {
+                    SearchView()
+                        .searchable(text: $searchText)
                 }
+            }
         }
         .accentColor(.white)
     }
