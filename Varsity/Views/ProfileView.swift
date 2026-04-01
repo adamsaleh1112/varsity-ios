@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct VarsityMeView: View {
+struct ProfileView: View {
     @EnvironmentObject var authManager: SimpleAuthManager
     @State private var showingEditProfile = false
     @State private var showingTeamSelection = false

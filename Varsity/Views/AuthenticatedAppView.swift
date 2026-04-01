@@ -33,8 +33,8 @@ struct MainAppView: View {
                 VarsityGamesView()
             }
             
-            Tab("Me", systemImage: "person.fill") {
-                VarsityMeView()
+            Tab("Profile", systemImage: "person.fill") {
+                ProfileView()
             }
             
             // Dedicated Search Tab (separate on the right)
