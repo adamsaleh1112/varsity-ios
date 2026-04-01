@@ -27,220 +27,191 @@ struct EditProfileView: View {
     @State private var imageToCrop: UIImage? = nil
     @State private var bannerToCrop: UIImage? = nil
     
-    // Helper computed property for banner view
-    private var bannerView: some View {
-        Group {
-            if let selectedBannerData,
-               let uiImage = UIImage(data: selectedBannerData) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 120)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-            } else if let bannerUrl = authManager.currentUser?.bannerUrl,
-                      !bannerUrl.isEmpty {
-                AsyncImage(url: URL(string: bannerUrl)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.gray.opacity(0.3))
-                }
-                .frame(height: 120)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            } else {
-                // Default banner - no placeholder
-                AsyncImage(url: URL(string: "https://hpfxonowaopgclnujptn.supabase.co/storage/v1/object/public/user-assets/banners/defaultuserpic.jpg")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.gray.opacity(0.3))
-                }
-                .frame(height: 120)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-        }
-    }
-    
-    // Helper computed property for avatar view
-    private var avatarView: some View {
-        Group {
-            if let selectedImageData,
-               let uiImage = UIImage(data: selectedImageData) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 120, height: 120)
-                    .clipShape(Circle())
-            } else if let currentUrl = authManager.currentUser?.avatarUrl,
-                      !currentUrl.isEmpty {
-                AsyncImage(url: URL(string: currentUrl)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Circle()
-                        .fill(Color.gray.opacity(0.3))
-                        .overlay(
-                            Image(systemName: "person.fill")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                        )
-                }
-                .frame(width: 120, height: 120)
-                .clipShape(Circle())
-            } else {
-                AsyncImage(url: URL(string: "https://hpfxonowaopgclnujptn.supabase.co/storage/v1/object/public/user-assets/avatars/defaultuserpic.jpg")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Circle()
-                        .fill(Color.gray.opacity(0.3))
-                        .overlay(
-                            Image(systemName: "person.fill")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                        )
-                }
-                .frame(width: 120, height: 120)
-                .clipShape(Circle())
-            }
-        }
-    }
-    
-    // Helper computed property for banner section
-    private var bannerSection: some View {
-        VStack(spacing: 12) {
-            bannerView
-            
+    // Combined header section with full-width banner and centered overlapping PFP
+    private var headerSection: some View {
+        ZStack(alignment: .top) {
+            // Full-width banner (tappable)
             Button(action: {
                 showingBannerOptions = true
             }) {
-                Text(isUploading ? "Uploading..." : "Change Banner")
-                    .foregroundColor(Color(hex: "6e27e8"))
-                    .font(.subheadline)
-            }
-            .disabled(isUploading)
-            .confirmationDialog("Change Banner", isPresented: $showingBannerOptions, titleVisibility: .visible) {
-                Button("Photo Library") {
-                    showingBannerPicker = true
-                }
-                Button("Files") {
-                    showingBannerDocumentPicker = true
-                }
-                Button("Remove Banner", role: .destructive) {
-                    selectedBannerData = nil
-                    selectedBannerItem = nil
-                    Task {
-                        // Delete from storage first
-                        await authManager.deleteBanner()
-                        // Then update profile to default
-                        await authManager.updateProfile(
-                            displayName: displayName.isEmpty ? nil : displayName,
-                            bio: bio.isEmpty ? nil : bio,
-                            avatarUrl: nil,
-                            bannerUrl: "https://hpfxonowaopgclnujptn.supabase.co/storage/v1/object/public/user-assets/banners/defaultuserpic.jpg"
-                        )
+                Group {
+                    if let selectedBannerData,
+                       let uiImage = UIImage(data: selectedBannerData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } else if let bannerUrl = authManager.currentUser?.bannerUrl,
+                              !bannerUrl.isEmpty {
+                        AsyncImage(url: URL(string: bannerUrl)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                        }
+                    } else {
+                        Rectangle()
+                            .fill(Color(hex: "28282B"))
                     }
                 }
-                Button("Cancel", role: .cancel) { }
+                .frame(height: 140)
+                .frame(maxWidth: .infinity)
             }
-            .photosPicker(isPresented: $showingBannerPicker, selection: $selectedBannerItem, matching: .images)
-            .sheet(isPresented: $showingBannerDocumentPicker) {
-                DocumentPicker { url in
-                    if let data = try? Data(contentsOf: url) {
-                        selectedBannerData = data
-                    }
-                    showingBannerDocumentPicker = false
-                }
-            }
-        }
-        .padding(.horizontal, 20)
-    }
-    
-    // Helper computed property for profile picture section
-    private var profilePictureSection: some View {
-        VStack(spacing: 16) {
-            avatarView
-            
+            .buttonStyle(PlainButtonStyle())
+
+            // Centered profile picture overlapping banner with half hanging off
             Button(action: {
                 showingPhotoOptions = true
             }) {
-                Text(isUploading ? "Uploading..." : "Change Photo")
-                    .foregroundColor(Color(hex: "6e27e8"))
-                    .font(.subheadline)
-            }
-            .disabled(isUploading)
-            .confirmationDialog("Change Profile Picture", isPresented: $showingPhotoOptions, titleVisibility: .visible) {
-                Button("Photo Library") {
-                    showingPhotoPicker = true
-                }
-                Button("Files") {
-                    showingDocumentPicker = true
-                }
-                Button("Remove Avatar", role: .destructive) {
-                    selectedImageData = nil
-                    selectedPhotoItem = nil
-                    Task {
-                        // Delete from storage first
-                        await authManager.deleteAvatar()
-                        // Then update profile to default
-                        await authManager.updateProfile(
-                            displayName: displayName.isEmpty ? nil : displayName,
-                            bio: bio.isEmpty ? nil : bio,
-                            avatarUrl: "https://hpfxonowaopgclnujptn.supabase.co/storage/v1/object/public/user-assets/avatars/defaultuserpic.jpg",
-                            bannerUrl: nil
-                        )
+                Group {
+                    if let selectedImageData,
+                       let uiImage = UIImage(data: selectedImageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .clipShape(Circle())
+                    } else if let currentUrl = authManager.currentUser?.avatarUrl,
+                              !currentUrl.isEmpty {
+                        AsyncImage(url: URL(string: currentUrl)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Circle()
+                                .fill(Color.gray.opacity(0.3))
+                        }
+                        .clipShape(Circle())
+                    } else {
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(
+                                Image(systemName: "person.fill")
+                                    .font(.title)
+                                    .foregroundColor(.gray)
+                            )
                     }
                 }
-                Button("Cancel", role: .cancel) { }
+                .frame(width: 100, height: 100)
+                .background(Color(hex: "17171B"))
+                .clipShape(Circle())
+                .overlay(
+                    Circle()
+                        .stroke(Color(hex: "17171B"), lineWidth: 4)
+                )
             }
-            .photosPicker(isPresented: $showingPhotoPicker, selection: $selectedPhotoItem, matching: .images)
-            .sheet(isPresented: $showingDocumentPicker) {
-                DocumentPicker { url in
-                    if let data = try? Data(contentsOf: url) {
-                        selectedImageData = data
-                    }
-                    showingDocumentPicker = false
+            .buttonStyle(PlainButtonStyle())
+            .padding(.top, 140) // Position so half overlaps banner, half hangs below
+            .padding(.bottom, 50)
+        }
+        .frame(height: 190) // Total height: 140 banner + 50px of PFP hanging below
+        .confirmationDialog("Change Banner", isPresented: $showingBannerOptions, titleVisibility: .visible) {
+            Button("Photo Library") {
+                showingBannerPicker = true
+            }
+            Button("Files") {
+                showingBannerDocumentPicker = true
+            }
+            Button("Remove Banner", role: .destructive) {
+                selectedBannerData = nil
+                selectedBannerItem = nil
+                Task {
+                    await authManager.deleteBanner()
+                    await authManager.updateProfile(
+                        displayName: displayName.isEmpty ? nil : displayName,
+                        bio: bio.isEmpty ? nil : bio,
+                        avatarUrl: nil,
+                        bannerUrl: "https://hpfxonowaopgclnujptn.supabase.co/storage/v1/object/public/user-assets/banners/defaultuserpic.jpg"
+                    )
                 }
+            }
+            Button("Cancel", role: .cancel) { }
+        }
+        .photosPicker(isPresented: $showingBannerPicker, selection: $selectedBannerItem, matching: .images)
+        .sheet(isPresented: $showingBannerDocumentPicker) {
+            DocumentPicker { url in
+                if let data = try? Data(contentsOf: url) {
+                    selectedBannerData = data
+                }
+                showingBannerDocumentPicker = false
             }
         }
-        .padding(.top, 8)
+        .confirmationDialog("Change Profile Picture", isPresented: $showingPhotoOptions, titleVisibility: .visible) {
+            Button("Photo Library") {
+                showingPhotoPicker = true
+            }
+            Button("Files") {
+                showingDocumentPicker = true
+            }
+            Button("Remove Avatar", role: .destructive) {
+                selectedImageData = nil
+                selectedPhotoItem = nil
+                Task {
+                    await authManager.deleteAvatar()
+                    await authManager.updateProfile(
+                        displayName: displayName.isEmpty ? nil : displayName,
+                        bio: bio.isEmpty ? nil : bio,
+                        avatarUrl: "https://hpfxonowaopgclnujptn.supabase.co/storage/v1/object/public/user-assets/avatars/defaultuserpic.jpg",
+                        bannerUrl: nil
+                    )
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        }
+        .photosPicker(isPresented: $showingPhotoPicker, selection: $selectedPhotoItem, matching: .images)
+        .sheet(isPresented: $showingDocumentPicker) {
+            DocumentPicker { url in
+                if let data = try? Data(contentsOf: url) {
+                    selectedImageData = data
+                }
+                showingDocumentPicker = false
+            }
+        }
     }
     
-    // Helper computed property for form fields
+    // Helper computed property for form fields with labels on left and inputs on right
     private var formFieldsSection: some View {
-        VStack(spacing: 16) {
-            // Display Name Field
-            TextField("", text: $displayName, prompt: Text("Display Name").foregroundColor(.gray.opacity(0.6)))
-                .padding()
-                .background(Color.clear)
-                .foregroundColor(.white)
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color(hex: "28282B"), lineWidth: 1)
-                )
-                .frame(height: 50)
+        VStack(spacing: 0) {
+            // Name field row
+            HStack(spacing: 16) {
+                Text("Name")
+                    .font(.body)
+                    .foregroundColor(.gray)
+                    .frame(width: 60, alignment: .leading)
+                
+                TextField("", text: $displayName, prompt: Text("Add your name").foregroundColor(.gray.opacity(0.6)))
+                    .font(.body)
+                    .foregroundColor(.white)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
             
-            // Bio Field
-            TextField("", text: $bio, prompt: Text("Bio").foregroundColor(.gray.opacity(0.6)), axis: .vertical)
-                .lineLimit(3...6)
-                .padding()
-                .background(Color.clear)
-                .foregroundColor(.white)
-                .autocapitalization(.none)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color(hex: "28282B"), lineWidth: 1)
-                )
+            Divider()
+                .background(Color(hex: "28282B"))
+                .padding(.leading, 20)
+            
+            // Bio field row
+            HStack(alignment: .top, spacing: 16) {
+                Text("Bio")
+                    .font(.body)
+                    .foregroundColor(.gray)
+                    .frame(width: 60, alignment: .leading)
+                
+                TextField("", text: $bio, prompt: Text("Add a bio to your profile").foregroundColor(.gray.opacity(0.6)), axis: .vertical)
+                    .font(.body)
+                    .foregroundColor(.white)
+                    .autocapitalization(.none)
+                    .lineLimit(1...4)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            
+            Divider()
+                .background(Color(hex: "28282B"))
         }
-        .padding(.horizontal, 20)
+        .background(Color(hex: "17171B"))
     }
     
     // Helper computed property for save button
@@ -333,15 +304,20 @@ struct EditProfileView: View {
                 .background(Color(hex: "17171B"))
                 
                 ScrollView {
-                    VStack(spacing: 24) {
-                        bannerSection
-                        profilePictureSection
+                    VStack(spacing: 0) {
+                        headerSection
+                        
+                        // 20px padding under PFP, then divider
+                        Divider()
+                            .background(Color(hex: "28282B"))
+                            .padding(.top, 20)
+                        
                         formFieldsSection
                         saveButton
+                            .padding(.top, 30)
                         
                         Spacer(minLength: 50)
                     }
-                    .padding(.top, 8)
                     .padding(.bottom, 20)
                 }
             }
@@ -378,27 +354,39 @@ struct EditProfileView: View {
                     }
                 }
             }
-            .fullScreenCover(item: $imageToCrop) { image in
-                ImageCropView(
-                    image: image,
-                    cropShape: .circle,
-                    onCrop: { croppedImage in
-                        if let croppedData = croppedImage.jpegData(compressionQuality: 0.9) {
-                            selectedImageData = croppedData
+            .fullScreenCover(isPresented: .init(
+                get: { imageToCrop != nil },
+                set: { if !$0 { imageToCrop = nil } }
+            )) {
+                if let image = imageToCrop {
+                    ImageCropView(
+                        image: image,
+                        cropShape: .circle,
+                        onCrop: { croppedImage in
+                            if let croppedData = croppedImage.jpegData(compressionQuality: 0.9) {
+                                selectedImageData = croppedData
+                            }
+                            imageToCrop = nil
                         }
-                    }
-                )
+                    )
+                }
             }
-            .fullScreenCover(item: $bannerToCrop) { image in
-                ImageCropView(
-                    image: image,
-                    cropShape: .rectangle,
-                    onCrop: { croppedImage in
-                        if let croppedData = croppedImage.jpegData(compressionQuality: 0.9) {
-                            selectedBannerData = croppedData
+            .fullScreenCover(isPresented: .init(
+                get: { bannerToCrop != nil },
+                set: { if !$0 { bannerToCrop = nil } }
+            )) {
+                if let image = bannerToCrop {
+                    ImageCropView(
+                        image: image,
+                        cropShape: .rectangle,
+                        onCrop: { croppedImage in
+                            if let croppedData = croppedImage.jpegData(compressionQuality: 0.9) {
+                                selectedBannerData = croppedData
+                            }
+                            bannerToCrop = nil
                         }
-                    }
-                )
+                    )
+                }
             }
             .alert("Error", isPresented: .constant(authManager.errorMessage != nil)) {
                 Button("OK") {

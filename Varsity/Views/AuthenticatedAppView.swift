@@ -41,8 +41,26 @@ struct MainAppView: View {
                     Image(systemName: "person.fill")
                     Text("Me")
                 }
+            
+            SearchView()
+                .tabItem {
+                    Image(systemName: "magnifyingglass")
+                    Text("Search")
+                }
         }
         .accentColor(.white)
+    }
+}
+
+struct SearchView: View {
+    var body: some View {
+        ZStack {
+            Color(hex: "17171B").ignoresSafeArea()
+            
+            Text("Search")
+                .font(.largeTitle)
+                .foregroundColor(.white)
+        }
     }
 }
 

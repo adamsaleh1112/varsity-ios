@@ -54,7 +54,7 @@ struct ImageCropView: View {
                     .fontWeight(.semibold)
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 8)
+                .padding(.top, 64)
                 .padding(.bottom, 12)
                 
                 Spacer()
@@ -63,19 +63,13 @@ struct ImageCropView: View {
                 GeometryReader { geometry in
                     let containerSize = geometry.size
                     let cropSize = calculateCropSize(containerSize: containerSize)
+                    let cropOrigin = CGPoint(
+                        x: (containerSize.width - cropSize.width) / 2,
+                        y: (containerSize.height - cropSize.height) / 2
+                    )
                     
                     ZStack {
-                        // Background dimming
-                        Color.black.opacity(0.5)
-                            .mask(
-                                Rectangle()
-                                    .overlay(
-                                        cropOverlay(size: cropSize, shape: cropShape)
-                                            .blendMode(.destinationOut)
-                                    )
-                            )
-                        
-                        // Draggable Image
+                        // Draggable Image (bottom layer)
                         Image(uiImage: image)
                             .resizable()
                             .scaledToFill()
@@ -84,6 +78,7 @@ struct ImageCropView: View {
                                 x: containerSize.width / 2 + offset.width,
                                 y: containerSize.height / 2 + offset.height
                             )
+                            .clipped()
                             .gesture(
                                 SimultaneousGesture(
                                     // Pan gesture
@@ -106,15 +101,31 @@ struct ImageCropView: View {
                                         }
                                         .onEnded { _ in
                                             lastScale = scale
-                                            // Re-constrain offset after zoom
                                             offset = constrainOffset(offset, cropSize: cropSize, containerSize: containerSize)
                                             lastOffset = offset
                                         }
                                 )
                             )
                         
+                        // Full screen dimming overlay - covers entire editor area
+                        ZStack {
+                            Color.black.opacity(0.7)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        }
+                        .mask(
+                            Rectangle()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .overlay(
+                                    cropOverlayFill(size: cropSize, shape: cropShape)
+                                        .position(x: containerSize.width/2, y: containerSize.height/2)
+                                        .blendMode(.destinationOut)
+                                )
+                        )
+                        .allowsHitTesting(false)
+                        
                         // Crop Overlay Border
                         cropOverlay(size: cropSize, shape: cropShape)
+                            .position(x: containerSize.width/2, y: containerSize.height/2)
                     }
                     .onAppear {
                         setupInitialState(containerSize: containerSize)
@@ -128,6 +139,7 @@ struct ImageCropView: View {
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .padding(.bottom, 30)
+                    .padding(.top, 10)
             }
         }
     }
@@ -157,6 +169,18 @@ struct ImageCropView: View {
         case .rectangle:
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.white, lineWidth: 2)
+                .frame(width: size.width, height: size.height)
+        }
+    }
+    
+    @ViewBuilder
+    private func cropOverlayFill(size: CGSize, shape: CropShape) -> some View {
+        switch shape {
+        case .circle:
+            Circle()
+                .frame(width: size.width, height: size.height)
+        case .rectangle:
+            RoundedRectangle(cornerRadius: 12)
                 .frame(width: size.width, height: size.height)
         }
     }

@@ -72,7 +72,7 @@ struct VarsityMeView: View {
                                 .font(.title2)
                                 .foregroundColor(.white)
                                 .frame(width: 44, height: 44)
-                                .background(Color.black.opacity(0.3))
+                                .background(Color.black.opacity(0.6))
                                 .clipShape(Circle())
                         }
                         .padding(.trailing, 20)
@@ -130,17 +130,16 @@ struct VarsityMeView: View {
     
     private var userInfoSection: some View {
         VStack(spacing: 8) {
-            VStack(spacing: 2) {
+            // Display name and username on same line
+            HStack(spacing: 6) {
                 Text(authManager.currentUser?.displayName ?? authManager.currentUser?.username ?? "User")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
                 
-                if let username = authManager.currentUser?.username,
-                   let displayName = authManager.currentUser?.displayName,
-                   !displayName.isEmpty && displayName != username {
+                if let username = authManager.currentUser?.username {
                     Text("@\(username)")
-                        .font(.subheadline)
+                        .font(.title3)
                         .foregroundColor(.gray)
                 }
             }
@@ -148,16 +147,15 @@ struct VarsityMeView: View {
             if let bio = authManager.currentUser?.bio, !bio.isEmpty {
                 Text(bio)
                     .font(.body)
-                    .foregroundColor(.gray)
+                    .foregroundColor(.white)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 20)
             }
             
             if let createdAt = authManager.currentUser?.createdAt {
                 Text(formatDateJoined(createdAt))
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundColor(.gray)
-                    .padding(.top, 4)
             }
         }
         .padding(.top, 20)
