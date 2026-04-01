@@ -355,8 +355,9 @@ struct EditProfileView: View {
                     print("Photo item selected, loading data...")
                     if let data = try? await newItem?.loadTransferable(type: Data.self),
                        let uiImage = UIImage(data: data) {
-                        imageToCrop = uiImage
-                        showingAvatarCrop = true
+                        await MainActor.run {
+                            imageToCrop = uiImage
+                        }
                         print("Photo data loaded and ready for cropping: \(data.count) bytes")
                     } else {
                         print("Failed to load photo data")
@@ -368,39 +369,36 @@ struct EditProfileView: View {
                     print("Banner item selected, loading data...")
                     if let data = try? await newItem?.loadTransferable(type: Data.self),
                        let uiImage = UIImage(data: data) {
-                        bannerToCrop = uiImage
-                        showingBannerCrop = true
+                        await MainActor.run {
+                            bannerToCrop = uiImage
+                        }
                         print("Banner data loaded and ready for cropping: \(data.count) bytes")
                     } else {
                         print("Failed to load banner data")
                     }
                 }
             }
-            .fullScreenCover(isPresented: $showingAvatarCrop) {
-                if let imageToCrop {
-                    ImageCropView(
-                        image: imageToCrop,
-                        cropShape: .circle,
-                        onCrop: { croppedImage in
-                            if let croppedData = croppedImage.jpegData(compressionQuality: 0.9) {
-                                selectedImageData = croppedData
-                            }
+            .fullScreenCover(item: $imageToCrop) { image in
+                ImageCropView(
+                    image: image,
+                    cropShape: .circle,
+                    onCrop: { croppedImage in
+                        if let croppedData = croppedImage.jpegData(compressionQuality: 0.9) {
+                            selectedImageData = croppedData
                         }
-                    )
-                }
+                    }
+                )
             }
-            .fullScreenCover(isPresented: $showingBannerCrop) {
-                if let bannerToCrop {
-                    ImageCropView(
-                        image: bannerToCrop,
-                        cropShape: .rectangle,
-                        onCrop: { croppedImage in
-                            if let croppedData = croppedImage.jpegData(compressionQuality: 0.9) {
-                                selectedBannerData = croppedData
-                            }
+            .fullScreenCover(item: $bannerToCrop) { image in
+                ImageCropView(
+                    image: image,
+                    cropShape: .rectangle,
+                    onCrop: { croppedImage in
+                        if let croppedData = croppedImage.jpegData(compressionQuality: 0.9) {
+                            selectedBannerData = croppedData
                         }
-                    )
-                }
+                    }
+                )
             }
             .alert("Error", isPresented: .constant(authManager.errorMessage != nil)) {
                 Button("OK") {

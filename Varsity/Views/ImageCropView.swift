@@ -78,7 +78,7 @@ struct ImageCropView: View {
                         // Draggable Image
                         Image(uiImage: image)
                             .resizable()
-                            .scaledToFill
+                            .scaledToFill()
                             .frame(width: imageSize.width * scale, height: imageSize.height * scale)
                             .position(
                                 x: containerSize.width / 2 + offset.width,
@@ -115,7 +115,6 @@ struct ImageCropView: View {
                         
                         // Crop Overlay Border
                         cropOverlay(size: cropSize, shape: cropShape)
-                            .stroke(Color.white, lineWidth: 2)
                     }
                     .onAppear {
                         setupInitialState(containerSize: containerSize)
@@ -153,9 +152,11 @@ struct ImageCropView: View {
         switch shape {
         case .circle:
             Circle()
+                .stroke(Color.white, lineWidth: 2)
                 .frame(width: size.width, height: size.height)
         case .rectangle:
             RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.white, lineWidth: 2)
                 .frame(width: size.width, height: size.height)
         }
     }
