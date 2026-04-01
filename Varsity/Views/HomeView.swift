@@ -366,5 +366,5 @@ struct NoEffectButtonStyle: ButtonStyle {
 }
 
 #Preview {
-    VarsityHomeView()
+    HomeView()
 }
